@@ -1,0 +1,32 @@
+# This is the main key map. The value on the left hand is always the same, don't change this value, the value on the
+# right hand is the name of the column (name from the first row aka header row) where are transaltion keys
+#
+key-ios: whatever-ios-keys
+
+# The language is two letters ISO 639-1 code https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+# The region is two letter ISO 31166-1 Alpha-2 code https://en.wikipedia.org/wiki/ISO_3166-1
+# 
+# This is the lanuages map, value on the left hand is the combination of language and region code, mention above,
+# the value on the right hand is the name of the column in XLSX file (name from the first row aka header row)
+#
+languages:
+  pl_PL: pl
+  ro_RO: ro
+  en_GB: uk
+  el: el
+  
+# If dir for language from above list isn't define, default dir will be used 
+# default dir: {lang[-region]_prefix}.lproj
+# e.g.: Project/MyApp/en.lproj
+#       Project/MyApp/en-GB.lproj
+#
+# Defined paths are relative to place which `locgen-swift` was executed
+# 
+dirs:
+  ro_RO: translations/ro/
+
+# If name for language isn't define, default name will be used
+# default name: Localizable.strings
+#
+names:
+  ro_RO: ro.strings
