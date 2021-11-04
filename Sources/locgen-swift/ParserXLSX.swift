@@ -89,22 +89,22 @@ class ParserXLSX {
         let dirsMap = map[dirsKey] as? [String: String]
         let namesMap = map[namesKey] as? [String: String]
    
-        var mainKeyIndex: Int = -1
+        var mainKeyRef: ColumnReference? = nil
         var languageColumns: [String: ColumnReference] = [:]
         
-        for (index, cell) in headerRow.cells.enumerated() {
+        for cell in headerRow.cells {
             let value = extractValue(from: cell, sharedStrings: sharedStrings)
             
             if let value = value {
                 if value == mainKeyMap {
-                    mainKeyIndex = index
+                    mainKeyRef = cell.reference.column
                 } else if let object = languagesMap.first(where: {_, val in return val == value }) {
                     languageColumns[object.key] = cell.reference.column
                 }
             }
         }
         
-        guard mainKeyIndex != -1 else {
+        guard let mainKeyRef = mainKeyRef else {
             throw InternalError.cantFind("Can't find column named `\(mainKeyMap)` in xlsx file")
         }
         
@@ -117,7 +117,7 @@ class ParserXLSX {
         var isFirstRow = true
         for i in 1..<data.rows.count {
             let row = data.rows[i]
-            let keyCell = row.cells[mainKeyIndex]
+            let keyCell = row.cells.first(where: { cell in return cell.reference.column.value == mainKeyRef.value })
             guard let keyvalue = extractValue(from: keyCell, sharedStrings: sharedStrings), !keyvalue.isEmpty else {
                 continue
             }
@@ -139,7 +139,11 @@ class ParserXLSX {
         writeData()
     }
     
-    private func extractValue(from cell: Cell, sharedStrings: SharedStrings?) -> String? {
+    private func extractValue(from cell: Cell?, sharedStrings: SharedStrings?) -> String? {
+        guard let cell = cell else {
+            return nil
+        }
+        
         columns.insert(cell.reference.column.value)
         if let cellValue = cell.value, Int(cellValue) == nil {
             return cell.value
