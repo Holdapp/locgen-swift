@@ -19,10 +19,7 @@ jobs:
       - name: Build product
         run: swift build -c release
 
-      - name: File structure
-        run: find .
-
       - uses: actions/upload-artifact@v2
         with:
           name: Executable artifact
-          path: .
+          path: ./.build/x86_64-apple-macosx/release/locgen-swift
