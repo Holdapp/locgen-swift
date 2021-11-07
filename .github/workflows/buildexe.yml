@@ -7,20 +7,18 @@ on:
 
 jobs:
     build:
-        name: Build executable using SPM
         runs-on: macos-latest
-
         steps:
             - name: Checkout
-                uses: actions/checkout@v2
+              uses: actions/checkout@v2
 
             - name: Build
-                run: swift build -c release
+              run: swift build -c release
 
             - name: Xcodebuild Logs Artifact
-                if: always()
-                uses: actions/upload-artifact@v2
-                with:
+              if: always()
+              uses: actions/upload-artifact@v2
+              with:
                 name: Executable artifact
                 path: .build/release/locgen-swift
 
