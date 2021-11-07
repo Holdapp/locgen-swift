@@ -15,7 +15,7 @@ class InputParser: NSObject {
     init(arguments: LocgenOptions) {
         self.arguments = arguments
         self.inputPath = arguments.input?.removingPercentEncoding ?? ""
-        self.map = arguments.map ?? ""
+        self.map = arguments.map?.removingPercentEncoding ?? ""
         self.sheet = arguments.sheet ?? ""
     }
     
@@ -43,7 +43,7 @@ class InputParser: NSObject {
             xlsxData = try Data(contentsOf: try self.inputPath.asFileURL())
         }
         
-        let mapURL = try self.map.asURL()
+        let mapURL = try self.map.replacingOccurrences(of: "\\", with: "").asURL()
         if try mapURL.isWeb() {
             downloadManager.enqueue(url: mapURL, id: "map")
         } else {
