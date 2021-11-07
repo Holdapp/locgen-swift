@@ -13,6 +13,9 @@ jobs:
               uses: actions/checkout@v2
 
             - name: Build
+              uses: fwal/setup-swift@v1
+                with:
+                    swift-version: "5.4"
               run: swift build -c release
 
             - name: Xcodebuild Logs Artifact
