@@ -41,7 +41,7 @@ enum InternalError: Error {
             defaultMessage = "Array is empty or nil"
             additionalInfo = info
         case .cantFind(let info):
-            defaultMessage = "Can't find item"
+            defaultMessage = "Can't find item[s]"
             additionalInfo = info
         case .cantConvert(let info):
             defaultMessage = "Can't convert data"

@@ -39,7 +39,7 @@ class DownloadManager {
         tasks.append(task)
     }
     
-    func execute(finished: @escaping ([DownloadResponse]) -> ()) {
+    func execute(finished: ([DownloadResponse]) -> ()) {
         guard hasEnquedTasks else {
             finished([])
             return

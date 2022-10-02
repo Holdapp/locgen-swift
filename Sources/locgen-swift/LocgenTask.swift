@@ -1,53 +1,47 @@
 //
 
 import Foundation
+import Yams
 
-class InputParser: NSObject {
+struct LocgenTask {
     private let queue = DispatchQueue(label: "com.holdapp.locgen.queue")
     private let semaphore = DispatchSemaphore(value: 0)
     private let downloadManager = DownloadManager()
-    private let arguments: LocgenOptions
     private let inputPath: String
-    private let map: String
-    private let sheet: String
-    private lazy var xlsxParser = ParserXLSX()
+    private let mapPath: String
+    private let sheets: [String]
     
     init(arguments: LocgenOptions) {
-        self.arguments = arguments
-        self.inputPath = arguments.input?.removingPercentEncoding ?? ""
-        self.map = arguments.map?.removingPercentEncoding ?? ""
-        self.sheet = arguments.sheet ?? ""
+        self.inputPath = arguments.input
+        self.mapPath = arguments.map
+        self.sheets = arguments.sheets
     }
     
     func run() throws {
-        guard !inputPath.isEmpty else {
-            throw InternalError.omitedOption("`--input` option can't be empty")
+        guard let mapPath = mapPath.removingPercentEncoding else {
+            fatalError()
         }
         
-        guard !sheet.isEmpty else {
-            throw InternalError.omitedOption("`--sheet` option can't be empty")
-        }
-        
-        guard !map.isEmpty else {
-            throw InternalError.omitedOption("`--map` option can't be empty")
+        guard let inputPath = inputPath.removingPercentEncoding else {
+            fatalError()
         }
         
         var forwardedError: Error?
         var xlsxData: Data!
         var mapData: Data!
         
-        let xlsxURL = try self.inputPath.replacingOccurrences(of: "\\", with: "").asURL()
+        let xlsxURL = try inputPath.replacingOccurrences(of: "\\", with: "").asURL()
         if try xlsxURL.isWeb() {
             downloadManager.enqueue(url: xlsxURL, id: "xlsx")
         } else {
             xlsxData = try Data(contentsOf: try self.inputPath.asFileURL())
         }
         
-        let mapURL = try self.map.replacingOccurrences(of: "\\", with: "").asURL()
+        let mapURL = try mapPath.replacingOccurrences(of: "\\", with: "").asURL()
         if try mapURL.isWeb() {
             downloadManager.enqueue(url: mapURL, id: "map")
         } else {
-            mapData = try Data(contentsOf: try self.map.asFileURL())
+            mapData = try Data(contentsOf: try self.mapPath.asFileURL())
         }
         
         downloadManager.execute { responses in
@@ -69,8 +63,10 @@ class InputParser: NSObject {
         guard forwardedError == nil else {
             throw forwardedError!
         }
-       
-        try xlsxParser.parse(xlsxData: xlsxData, mapData: mapData)
+        
+        let config = try YAMLDecoder().decode(Config.self, from: mapData)
+        let xlsxParser = ParserXLSX(sheets: sheets)
+        try xlsxParser.parse(xlsxData: xlsxData, config: config)
     }
 }
 
