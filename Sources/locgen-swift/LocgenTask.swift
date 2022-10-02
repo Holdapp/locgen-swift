@@ -1,5 +1,3 @@
-//
-
 import Foundation
 import Yams
 
@@ -18,12 +16,12 @@ struct LocgenTask {
     }
     
     func run() throws {
-        guard let mapPath = mapPath.removingPercentEncoding else {
-            fatalError()
+        guard let mapPath = mapPath.removingPercentEncoding, !mapPath.isEmpty else {
+            throw InternalError.empty("`--map` option can't be empty")
         }
         
-        guard let inputPath = inputPath.removingPercentEncoding else {
-            fatalError()
+        guard let inputPath = inputPath.removingPercentEncoding, !inputPath.isEmpty else {
+            throw InternalError.empty("`--input` option can't be empty")
         }
         
         var forwardedError: Error?
@@ -34,14 +32,14 @@ struct LocgenTask {
         if try xlsxURL.isWeb() {
             downloadManager.enqueue(url: xlsxURL, id: "xlsx")
         } else {
-            xlsxData = try Data(contentsOf: try self.inputPath.asFileURL())
+            xlsxData = try Data(contentsOf: try inputPath.asFileURL())
         }
         
         let mapURL = try mapPath.replacingOccurrences(of: "\\", with: "").asURL()
         if try mapURL.isWeb() {
             downloadManager.enqueue(url: mapURL, id: "map")
         } else {
-            mapData = try Data(contentsOf: try self.mapPath.asFileURL())
+            mapData = try Data(contentsOf: try mapPath.asFileURL())
         }
         
         downloadManager.execute { responses in

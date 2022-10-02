@@ -1,9 +1,6 @@
-//
-
 import Foundation
 
 enum InternalError: Error {
-    case omitedOption(String)
     case empty(String)
     case fileNotFound(String)
     case cantParsePath(String)
@@ -19,9 +16,6 @@ enum InternalError: Error {
         var additionalInfo = ""
         
         switch self {
-        case .omitedOption(let info):
-            defaultMessage = "Option required"
-            additionalInfo = info
         case .empty(let info):
             defaultMessage = "Empty value"
             additionalInfo = info
@@ -59,11 +53,6 @@ enum InternalError: Error {
     }
     
     var showHelp: Bool {
-        switch self {
-        case .omitedOption:
-            return true
-        default:
-            return false
-        }
+        return false
     }
 }
