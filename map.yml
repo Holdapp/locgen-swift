@@ -1,7 +1,7 @@
 # This is the main key map. The value on the left hand is always the same, don't change this value, the value on the
 # right hand is the name of the column (name from the first row aka header row) where are transaltion keys
 #
-key-ios: whatever-ios-keys
+key: whatever-ios-keys
 
 # The language is two letters ISO 639-1 code https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 # The region is two letter ISO 31166-1 Alpha-2 code https://en.wikipedia.org/wiki/ISO_3166-1
