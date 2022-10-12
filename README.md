@@ -2,6 +2,17 @@
 
 Generate *.strings translation files for multiple languages from online Excel sheets. 
 
+## Install
+
+Tool can be installed via [Homebrew](https://brew.sh/):
+
+```
+brew tap holdapp/tap-public
+brew install locgen-swift
+```
+
+Or you can [install from source](#building-from-source).
+
 ## Usage
 
 ```shell
