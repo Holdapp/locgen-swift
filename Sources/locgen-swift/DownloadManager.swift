@@ -17,7 +17,7 @@ class DownloadManager {
     }
     
     func enqueue(url: URL, id: String) {
-        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        let task = URLSession.sharedEphemeral.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self else {
                 return
             }
