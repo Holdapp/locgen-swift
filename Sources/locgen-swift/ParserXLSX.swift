@@ -165,7 +165,8 @@ class ParserXLSX {
                 try deleteFile(at: fileURL)
             }
             
-            let textLine = "\"\(key)\" = \"\(translation)\";\n"
+            let escapedTranslation = translation.replacingOccurrences(of: "\"", with: "\\\"")
+            let textLine = "\"\(key)\" = \"\(escapedTranslation)\";\n"
             
             try append(line: textLine, to: fileURL)
         }
