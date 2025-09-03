@@ -97,26 +97,39 @@ class ParserXLSX {
         }
         
         var isFirstRow = true
+        var processedKeys: [String] = []
+        var skippedRows = 0
+        
+        print("🔍 Processing \(data.rows.count - 1) data rows...")
+        
         for i in 1..<data.rows.count {
             let row = data.rows[i]
             let keyCell = row.cells.first(where: { cell in return cell.reference.column.value == mainKeyRef.value })
-            guard let keyvalue = extractValue(from: keyCell, sharedStrings: sharedStrings), !keyvalue.isEmpty else {
-                continue
+            
+            if let keyvalue = extractValue(from: keyCell, sharedStrings: sharedStrings), !keyvalue.isEmpty {
+                print("✅ Processing key: '\(keyvalue)'")
+                processedKeys.append(keyvalue)
+                
+                try updateStrings(
+                    key: keyvalue,
+                    row: row,
+                    sharedStrings: sharedStrings,
+                    languageMap: languageColumns,
+                    isFirstRow: isFirstRow,
+                    dirsMap: config.dirs,
+                    namesMap: config.filenames,
+                    workingDir: workingDirectoryURL
+                )
+                
+                isFirstRow = false
+            } else {
+                skippedRows += 1
+                let keyValue = keyCell?.value ?? "nil"
+                print("⏭️ Skipping row \(i): key cell value = '\(keyValue)' (empty or nil)")
             }
-            
-            try updateStrings(
-                key: keyvalue,
-                row: row,
-                sharedStrings: sharedStrings,
-                languageMap: languageColumns,
-                isFirstRow: isFirstRow,
-                dirsMap: config.dirs,
-                namesMap: config.filenames,
-                workingDir: workingDirectoryURL
-            )
-            
-            isFirstRow = false
         }
+        
+        print("📊 Summary: Processed \(processedKeys.count) keys, skipped \(skippedRows) rows")
         
         writeData()
     }
@@ -127,11 +140,70 @@ class ParserXLSX {
         }
         
         columns.insert(cell.reference.column.value)
-        if let cellValue = cell.value, Int(cellValue) == nil {
-            return cell.value
-        } else if let sharedStrings = sharedStrings, cell.stringValue(sharedStrings) != nil {
-            return cell.stringValue(sharedStrings)
-        } else {
+        
+        // For shared string cells (type 's'), try cell.stringValue first, then direct lookup
+        if cell.type == .sharedString, let sharedStrings = sharedStrings {
+            if let stringValue = cell.stringValue(sharedStrings) {
+                // Debug specific indices
+                if cell.value == "6396" || cell.value == "6413" {
+                    print("🐛 cell.stringValue result for index \(cell.value ?? "nil"): '\(stringValue)'")
+                }
+                return stringValue
+            }
+            
+            // Fallback: direct lookup in shared strings
+            if let cellValue = cell.value,
+               let index = Int(cellValue),
+               index < sharedStrings.items.count {
+                let item = sharedStrings.items[index]
+                
+                // Check if text is available directly
+                if let text = item.text {
+                    return text
+                }
+                
+                // If text is nil, try to extract from richText runs
+                let mirror = Mirror(reflecting: item)
+                for child in mirror.children {
+                    if child.label == "richText", let richTextRuns = child.value as? [Any] {
+                        var combinedText = ""
+                        
+                        for run in richTextRuns {
+                            let runMirror = Mirror(reflecting: run)
+                            for runChild in runMirror.children {
+                                if runChild.label == "text", let text = runChild.value as? String? {
+                                    if let text = text {
+                                        combinedText += text
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if !combinedText.isEmpty {
+                            return combinedText
+                        }
+                    }
+                }
+                
+                return nil
+            }
+            
+            // If shared string lookup fails, return nil
+            return nil
+        }
+        // For other cells with shared strings available, try stringValue method
+        else if let sharedStrings = sharedStrings, let stringValue = cell.stringValue(sharedStrings) {
+            return stringValue
+        }
+        // For direct value cells, return the value if it's not numeric or if it's text
+        else if let cellValue = cell.value, Int(cellValue) == nil {
+            return cellValue
+        }
+        // For numeric cells, return as string
+        else if let cellValue = cell.value {
+            return cellValue
+        }
+        else {
             return nil
         }
     }
@@ -147,10 +219,10 @@ class ParserXLSX {
         workingDir: URL
     ) throws {
         for (lang, columnRef) in languageMap {
-            guard
-                let cell = row.cells.first(where: { cell in return cell.reference.column.value == columnRef.value }),
-                let translation = extractValue(from: cell, sharedStrings: sharedStrings)
-            else {
+            let cell = row.cells.first(where: { cell in return cell.reference.column.value == columnRef.value })
+            let translation = extractValue(from: cell, sharedStrings: sharedStrings)
+            
+            guard cell != nil, let translation = translation, !translation.isEmpty else {
                 continue
             }
             
@@ -167,6 +239,7 @@ class ParserXLSX {
             
             let escapedTranslation = escapeQuotes(in: translation)
             let textLine = "\"\(key)\" = \"\(escapedTranslation)\";\n"
+            
             
             try append(line: textLine, to: fileURL)
         }
