@@ -97,19 +97,12 @@ class ParserXLSX {
         }
         
         var isFirstRow = true
-        var processedKeys: [String] = []
-        var skippedRows = 0
-        
-        print("🔍 Processing \(data.rows.count - 1) data rows...")
         
         for i in 1..<data.rows.count {
             let row = data.rows[i]
             let keyCell = row.cells.first(where: { cell in return cell.reference.column.value == mainKeyRef.value })
             
             if let keyvalue = extractValue(from: keyCell, sharedStrings: sharedStrings), !keyvalue.isEmpty {
-                print("✅ Processing key: '\(keyvalue)'")
-                processedKeys.append(keyvalue)
-                
                 try updateStrings(
                     key: keyvalue,
                     row: row,
@@ -122,14 +115,9 @@ class ParserXLSX {
                 )
                 
                 isFirstRow = false
-            } else {
-                skippedRows += 1
-                let keyValue = keyCell?.value ?? "nil"
-                print("⏭️ Skipping row \(i): key cell value = '\(keyValue)' (empty or nil)")
             }
         }
         
-        print("📊 Summary: Processed \(processedKeys.count) keys, skipped \(skippedRows) rows")
         
         writeData()
     }
