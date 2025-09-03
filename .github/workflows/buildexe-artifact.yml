@@ -10,16 +10,16 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: fwal/setup-swift@v1
+      - uses: swift-actions/setup-swift@v2
         with:
           swift-version: "5.4"
 
       - name: Build product
         run: swift build -c release
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: Executable artifact
-          path: ./.build/x86_64-apple-macosx/release/locgen-swift
+          name: executable-artifact
+          path: ./.build/release/locgen-swift
