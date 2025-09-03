@@ -165,7 +165,7 @@ class ParserXLSX {
                 try deleteFile(at: fileURL)
             }
             
-            let escapedTranslation = translation.replacingOccurrences(of: "\"", with: "\\\"")
+            let escapedTranslation = escapeQuotes(in: translation)
             let textLine = "\"\(key)\" = \"\(escapedTranslation)\";\n"
             
             try append(line: textLine, to: fileURL)
@@ -204,5 +204,34 @@ class ParserXLSX {
         for(fileURL, content) in fileContent {
             FileManager.default.createFile(atPath: fileURL.path, contents: content.data(using: .utf8), attributes: nil)
         }
+    }
+    
+    private func escapeQuotes(in text: String) -> String {
+        // Manually iterate through string to avoid double-escaping already escaped quotes
+        var result = ""
+        var i = text.startIndex
+        
+        while i < text.endIndex {
+            let char = text[i]
+            
+            if char == "\"" {
+                // Check if this quote is already escaped (preceded by \)
+                let isEscaped = i > text.startIndex && text[text.index(before: i)] == "\\"
+                
+                if isEscaped {
+                    // Already escaped, keep as-is
+                    result.append(char)
+                } else {
+                    // Not escaped, escape it
+                    result.append("\\\"")
+                }
+            } else {
+                result.append(char)
+            }
+            
+            i = text.index(after: i)
+        }
+        
+        return result
     }
 }
